@@ -105,7 +105,7 @@ HomeNetMonitor/
 
 ## 🎓 Scopo Didattico
 
-Progetto ITS che integra:
+Progetto che integra:
 - Networking e scansione reti locali
 - Database relazionali (SQLite)
 - Web development (Flask + frontend)
@@ -120,7 +120,7 @@ Progetto ITS che integra:
 
 ## 📝 License
 
-MIT License - Progetto didattico ITS
+MIT License - Progetto didattico
 
 ## 👨‍💻 Autore
 
