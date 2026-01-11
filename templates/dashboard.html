@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Network Monitor Dashboard</title>
@@ -103,6 +104,38 @@
             color: #888;
             font-size: 14px;
         }
+
+.anomaly-card {
+            background: #2d1818;
+            border-left: 4px solid #ff4444;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+        
+        .anomaly-card.high-traffic {
+            border-left-color: #ff8800;
+        }
+        
+        .anomaly-card.odd-hours {
+            border-left-color: #ffaa00;
+        }
+        
+        .anomaly-card.new-device {
+            border-left-color: #ff4444;
+        }
+        
+        .anomaly-type {
+            font-weight: bold;
+            color: #ff4444;
+            font-size: 12px;
+        }
+        
+        .anomaly-details {
+            margin-top: 5px;
+            color: #ccc;
+        }
+
     </style>
 </head>
 <body>
@@ -143,7 +176,48 @@
                 </tbody>
             </table>
         </div>
+
+<h2 style="margin-top: 40px; color: #00d9ff;">📊 Consumo Banda (Ultime 24h)</h2>
         
+        <div class="devices-table" style="margin-top: 20px;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>IP</th>
+                        <th>Hostname</th>
+                        <th>Inviati</th>
+                        <th>Ricevuti</th>
+                        <th>Totale</th>
+                        <th>Pacchetti</th>
+                    </tr>
+                </thead>
+                <tbody id="traffic-body">
+                    <tr>
+                        <td colspan="6" style="text-align: center;">Caricamento...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+<h2 style="margin-top: 40px; color: #00d9ff;">📈 Grafici</h2>
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(500px, 1fr)); gap: 20px; margin-top: 20px;">
+            <div class="stat-card">
+                <h3>Consumo Banda per Dispositivo</h3>
+                <canvas id="bandwidthChart" style="max-height: 300px;"></canvas>
+            </div>
+            <div class="stat-card">
+                <h3>Timeline Connessioni (Ultimi 7 Giorni)</h3>
+                <canvas id="timelineChart" style="max-height: 300px;"></canvas>
+            </div>
+        </div>
+        
+<h2 style="margin-top: 40px; color: #ff4444;">🚨 Alert e Anomalie (Ultime 24h)</h2>
+        
+        <div id="anomalies-container" style="margin-top: 20px;">
+            <!-- Popolato dinamicamente -->
+        </div>
+
         <div class="last-update">
             Ultimo aggiornamento: <span id="last-update">-</span>
         </div>
@@ -158,6 +232,32 @@
                     document.getElementById('total-devices').textContent = data.total;
                     document.getElementById('active-devices').textContent = data.active;
                     document.getElementById('new-devices').textContent = data.new;
+                });
+
+// Fetch traffic data
+            fetch('/api/traffic')
+                .then(response => response.json())
+                .then(traffic => {
+                    const tbody = document.getElementById('traffic-body');
+                    tbody.innerHTML = '';
+                    
+                    if (traffic.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Nessun dato traffico disponibile</td></tr>';
+                        return;
+                    }
+                    
+                    traffic.forEach(item => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${item.ip}</td>
+                            <td>${item.hostname || 'Unknown'}</td>
+                            <td>${formatBytes(item.bytes_sent)}</td>
+                            <td>${formatBytes(item.bytes_received)}</td>
+                            <td style="font-weight: bold;">${formatBytes(item.total_bytes)}</td>
+                            <td>${item.packets.toLocaleString()}</td>
+                        `;
+                        tbody.appendChild(row);
+                    });
                 });
             
             // Fetch devices
@@ -196,6 +296,43 @@
                         `;
                         tbody.appendChild(row);
                     });
+// Fetch anomalies
+            fetch('/api/anomalies')
+                .then(response => response.json())
+                .then(anomalies => {
+                    const container = document.getElementById('anomalies-container');
+                    container.innerHTML = '';
+                    
+                    if (anomalies.length === 0) {
+                        container.innerHTML = '<div style="text-align: center; padding: 20px; color: #00ff88;">✓ Nessuna anomalia rilevata</div>';
+                        return;
+                    }
+                    
+                    anomalies.forEach(anomaly => {
+                        const card = document.createElement('div');
+                        const typeClass = anomaly.type.toLowerCase().replace('_', '-');
+                        card.className = `anomaly-card ${typeClass}`;
+                        
+                        const typeLabels = {
+                            'HIGH_TRAFFIC': '🔥 Traffico Elevato',
+                            'ODD_HOURS': '🌙 Orario Sospetto',
+                            'NEW_DEVICE': '🆕 Nuovo Dispositivo'
+                        };
+                        
+                        card.innerHTML = `
+                            <div class="anomaly-type">${typeLabels[anomaly.type] || anomaly.type}</div>
+                            <div style="margin-top: 8px;">
+                                <strong>${anomaly.ip}</strong> - ${anomaly.hostname}
+                            </div>
+                            <div class="anomaly-details">${anomaly.details}</div>
+                            <div style="margin-top: 8px; font-size: 12px; color: #888;">
+                                ${new Date(anomaly.timestamp).toLocaleString('it-IT')}
+                            </div>
+                        `;
+                        container.appendChild(card);
+                    });
+                });
+
                     
                     document.getElementById('last-update').textContent = new Date().toLocaleTimeString('it-IT');
                 });
@@ -207,12 +344,120 @@
         // Aggiorna ogni 10 secondi
         setInterval(updateDashboard, 10000);
 
+function formatBytes(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
 function markKnown(mac) {
             if (confirm('Marcare questo dispositivo come conosciuto?')) {
                 fetch('/api/mark_known/' + mac, { method: 'POST' })
                     .then(() => updateDashboard());
             }
         }
+
+// Grafici Chart.js
+        let bandwidthChart = null;
+        let timelineChart = null;
+        
+        function updateCharts() {
+            // Grafico consumo banda
+            fetch('/api/traffic')
+                .then(response => response.json())
+                .then(traffic => {
+                    const top5 = traffic.slice(0, 5);
+                    const labels = top5.map(t => t.hostname || t.ip);
+                    const dataSent = top5.map(t => (t.bytes_sent / 1024 / 1024).toFixed(2));
+                    const dataReceived = top5.map(t => (t.bytes_received / 1024 / 1024).toFixed(2));
+                    
+                    const ctx = document.getElementById('bandwidthChart');
+                    
+                    if (bandwidthChart) {
+                        bandwidthChart.destroy();
+                    }
+                    
+// Grafico timeline connessioni
+            fetch('/api/timeline')
+                .then(response => response.json())
+                .then(timeline => {
+                    const labels = timeline.map(t => new Date(t.date).toLocaleDateString('it-IT'));
+                    const data = timeline.map(t => t.count);
+                    
+                    const ctx = document.getElementById('timelineChart');
+                    
+                    if (timelineChart) {
+                        timelineChart.destroy();
+                    }
+                    
+                    timelineChart = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                label: 'Dispositivi Connessi',
+                                data: data,
+                                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                                borderColor: 'rgba(255, 99, 132, 1)',
+                                borderWidth: 2,
+                                tension: 0.4,
+                                fill: true
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                y: { 
+                                    beginAtZero: true,
+                                    ticks: { stepSize: 1 }
+                                }
+                            }
+                        }
+                    });
+                });
+
+                    bandwidthChart = new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: labels,
+                            datasets: [
+                                {
+                                    label: 'Inviati (MB)',
+                                    data: dataSent,
+                                    backgroundColor: 'rgba(0, 217, 255, 0.6)',
+                                    borderColor: 'rgba(0, 217, 255, 1)',
+                                    borderWidth: 1
+                                },
+                                {
+                                    label: 'Ricevuti (MB)',
+                                    data: dataReceived,
+                                    backgroundColor: 'rgba(0, 255, 136, 0.6)',
+                                    borderColor: 'rgba(0, 255, 136, 1)',
+                                    borderWidth: 1
+                                }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                y: { beginAtZero: true }
+                            }
+                        }
+                    });
+                });
+        }
+        
+        // Aggiorna grafici insieme alla dashboard
+        const originalUpdate = updateDashboard;
+        updateDashboard = function() {
+            originalUpdate();
+            updateCharts();
+        };
+
     </script>
 </body>
 </html>

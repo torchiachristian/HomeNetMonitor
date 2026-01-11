@@ -35,6 +35,33 @@ def init_database():
             FOREIGN KEY (device_id) REFERENCES devices(id)
         )
     ''')
+    # Tabella statistiche traffico
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS traffic_stats (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            device_id INTEGER,
+            ip TEXT,
+            bytes_sent INTEGER DEFAULT 0,
+            bytes_received INTEGER DEFAULT 0,
+            packets INTEGER DEFAULT 0,
+            timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (device_id) REFERENCES devices(id)
+        )
+    ''')
+
+# Tabella anomalie
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS anomalies (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            type TEXT NOT NULL,
+            ip TEXT,
+            mac TEXT,
+            hostname TEXT,
+            details TEXT,
+            timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            acknowledged BOOLEAN DEFAULT 0
+        )
+    ''')
     
     conn.commit()
     conn.close()

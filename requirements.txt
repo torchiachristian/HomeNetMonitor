@@ -1,3 +1,4 @@
 flask==3.0.0
 scapy==2.5.0
 python-nmap==0.7.1
+psutil==5.9.6
