@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Network Monitor Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1a1a2e;
+            color: #eee;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #00d9ff;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: #16213e;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+        
+        .stat-card h3 {
+            color: #00d9ff;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        
+        .stat-card .value {
+            font-size: 36px;
+            font-weight: bold;
+            color: #fff;
+        }
+        
+        .devices-table {
+            background: #16213e;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th {
+            background: #0f3460;
+            padding: 15px;
+            text-align: left;
+            color: #00d9ff;
+            font-weight: 600;
+        }
+        
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #0f3460;
+        }
+        
+        tr:hover {
+            background: #1a2942;
+        }
+        
+        .status-active {
+            color: #00ff88;
+            font-weight: bold;
+        }
+        
+        .status-inactive {
+            color: #888;
+        }
+        
+        .new-device {
+            background: #ff4444 !important;
+        }
+        
+        .last-update {
+            text-align: center;
+            margin-top: 20px;
+            color: #888;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌐 Network Monitor Dashboard</h1>
+        
+        <div class="stats">
+            <div class="stat-card">
+                <h3>DISPOSITIVI TOTALI</h3>
+                <div class="value" id="total-devices">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>ATTIVI ORA</h3>
+                <div class="value" id="active-devices">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>NUOVI / SCONOSCIUTI</h3>
+                <div class="value" id="new-devices">-</div>
+            </div>
+        </div>
+        
+        <div class="devices-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>IP</th>
+                        <th>MAC Address</th>
+                        <th>Hostname</th>
+                        <th>Prima Visto</th>
+                        <th>Ultima Visto</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="devices-body">
+                    <tr>
+                        <td colspan="6" style="text-align: center;">Caricamento...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="last-update">
+            Ultimo aggiornamento: <span id="last-update">-</span>
+        </div>
+    </div>
+    
+    <script>
+        function updateDashboard() {
+            // Fetch stats
+            fetch('/api/stats')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('total-devices').textContent = data.total;
+                    document.getElementById('active-devices').textContent = data.active;
+                    document.getElementById('new-devices').textContent = data.new;
+                });
+            
+            // Fetch devices
+            fetch('/api/devices')
+                .then(response => response.json())
+                .then(devices => {
+                    const tbody = document.getElementById('devices-body');
+                    tbody.innerHTML = '';
+                    
+                    if (devices.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Nessun dispositivo rilevato</td></tr>';
+                        return;
+                    }
+                    
+                    devices.forEach(device => {
+                        const row = document.createElement('tr');
+                        if (!device.is_known) {
+                            row.classList.add('new-device');
+                        }
+                        
+                        const lastSeen = new Date(device.last_seen);
+                        const now = new Date();
+                        const diffMinutes = (now - lastSeen) / 1000 / 60;
+                        const isActive = diffMinutes < 5;
+                        
+                        row.innerHTML = `
+                            <td>${device.ip}</td>
+                            <td>${device.mac}</td>
+                            <td>${device.hostname || 'Unknown'}</td>
+                            <td>${new Date(device.first_seen).toLocaleString('it-IT')}</td>
+                            <td>${lastSeen.toLocaleString('it-IT')}</td>
+                            <td class="${isActive ? 'status-active' : 'status-inactive'}">
+                                ${isActive ? '● Online' : '○ Offline'}
+                            </td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                    
+                    document.getElementById('last-update').textContent = new Date().toLocaleTimeString('it-IT');
+                });
+        }
+        
+        // Aggiorna subito
+        updateDashboard();
+        
+        // Aggiorna ogni 10 secondi
+        setInterval(updateDashboard, 10000);
+    </script>
+</body>
+</html>
