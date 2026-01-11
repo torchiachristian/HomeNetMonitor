@@ -191,6 +191,7 @@
                             <td>${lastSeen.toLocaleString('it-IT')}</td>
                             <td class="${isActive ? 'status-active' : 'status-inactive'}">
                                 ${isActive ? '● Online' : '○ Offline'}
+                                ${!device.is_known ? '<button onclick="markKnown(\'' + device.mac + '\')" style="margin-left: 10px; padding: 5px 10px; background: #00ff88; border: none; border-radius: 5px; cursor: pointer; color: #000; font-weight: bold;">✓ Marca Noto</button>' : ''}
                             </td>
                         `;
                         tbody.appendChild(row);
@@ -205,6 +206,13 @@
         
         // Aggiorna ogni 10 secondi
         setInterval(updateDashboard, 10000);
+
+function markKnown(mac) {
+            if (confirm('Marcare questo dispositivo come conosciuto?')) {
+                fetch('/api/mark_known/' + mac, { method: 'POST' })
+                    .then(() => updateDashboard());
+            }
+        }
     </script>
 </body>
 </html>

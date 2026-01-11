@@ -72,5 +72,17 @@ def get_stats():
         'new': new_devices
     })
 
+@app.route('/api/mark_known/<mac>', methods=['POST'])
+def mark_known(mac):
+    """Marca un dispositivo come conosciuto"""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute('UPDATE devices SET is_known = 1 WHERE mac = ?', (mac,))
+    conn.commit()
+    conn.close()
+    
+    return jsonify({'success': True})
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
