@@ -73,6 +73,14 @@ La dashboard mostra:
 - **Alert visivi**: Dispositivi nuovi evidenziati in rosso
 - **Auto-refresh**: Aggiornamento automatico ogni 10 secondi
 
+## 📊 Screenshots
+
+### Dashboard Overview
+![Dashboard Overview](screenshots/screenshot1_overview.png)
+
+### Consumo Banda, Grafici e Alert
+![Bandwidth and Charts](screenshots/screenshot2_bandwidth.png)
+
 ## 🔧 Configurazione
 
 ### Modificare range IP
