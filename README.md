@@ -6,7 +6,6 @@
 
 > 🎯 Dashboard web per monitoraggio continuo della rete locale con rilevamento dispodispositivi e alert anomalie.
 >
- [📸 Screenshots](#screenshots) | [🚀 Quick Start](#installazione)
 
 ## 📋 Funzionalità
 
