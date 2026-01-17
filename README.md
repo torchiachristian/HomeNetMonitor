@@ -1,6 +1,12 @@
 # 🌐 HomeNetMonitor
 
-Dashboard web per monitoraggio continuo della rete locale con rilevamento dispositivi e alert anomalie.
+![Python](https://img.shields.io/badge/python-3.10+-blue.svg)
+![Flask](https://img.shields.io/badge/flask-3.0-green.svg)
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
+
+> 🎯 Dashboard web per monitoraggio continuo della rete locale con rilevamento dispodispositivi e alert anomalie.
+>
+ [📸 Screenshots](#screenshots) | [🚀 Quick Start](#installazione)
 
 ## 📋 Funzionalità
 
