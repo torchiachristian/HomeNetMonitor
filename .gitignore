@@ -17,3 +17,11 @@ __pycache__/
 # OS
 .DS_Store
 Thumbs.db
+
+# Pre-commit
+.pre-commit-config.yaml.swp
+
+# Build
+build/
+dist/
+*.egg-info/
