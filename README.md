@@ -6,8 +6,6 @@
 
 Real-time home network monitoring dashboard with device detection and anomaly alerts.
 
-[📸 Screenshots](#screenshots) | [🚀 Quick Start](#installation)
-
 ## 📋 Features
 
 - ✅ Automatic network scanning every 30 seconds
