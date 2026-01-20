@@ -6,8 +6,6 @@
 
 Real-time home network monitoring dashboard with device detection and anomaly alerts.
 
-> 🎯 ITS Project - Practical learning of networking, databases, web development, and basic cybersecurity
-
 [📸 Screenshots](#screenshots) | [🚀 Quick Start](#installation)
 
 ## 📋 Features
